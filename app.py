@@ -9,7 +9,9 @@ import requests
 APP_DIR = Path(__file__).parent
 DB_PATH = APP_DIR / "chat_memory.db"
 
-GROQ_MODEL = "llama-3.1-8b-instant"
+# Any HF Inference Providers-supported chat model works here.
+# Examples: "meta-llama/Llama-3.1-8B-Instruct", "mistralai/Mistral-7B-Instruct-v0.3"
+HF_MODEL = "meta-llama/Llama-3.1-8B-Instruct"
 
 st.set_page_config(
     page_title="Shabnam Chat Bot",
@@ -85,18 +87,18 @@ def clear_messages(session_id):
     conn.close()
 
 
-# ================= GROQ API =================
-def groq_chat(messages):
-    api_key = st.secrets["GROQ_API_KEY"]
+# ================= HUGGING FACE API =================
+def hf_chat(messages):
+    api_key = st.secrets["HF_API_KEY"]
 
     response = requests.post(
-        "https://api.groq.com/openai/v1/chat/completions",
+        "https://router.huggingface.co/v1/chat/completions",
         headers={
             "Authorization": f"Bearer {api_key}",
             "Content-Type": "application/json"
         },
         json={
-            "model": GROQ_MODEL,
+            "model": HF_MODEL,
             "messages": messages,
             "temperature": 0.7,
             "max_tokens": 900
@@ -232,7 +234,7 @@ def main():
     with st.chat_message("assistant"):
         try:
             with st.spinner("Thinking... 🤔"):
-                reply = groq_chat(messages)
+                reply = hf_chat(messages)
 
             st.markdown(reply)
             save_message(session_id, "assistant", reply)
